@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js';
+import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js';
 import { auth, db } from './firebase-config.js';
 
@@ -7,6 +7,17 @@ const loginView=$('#loginView'), adminView=$('#adminView'), loginForm=$('#loginF
 let projects=[], videos=[];
 
 loginForm.addEventListener('submit', async (event) => { event.preventDefault(); $('#loginError').textContent=''; try { await signInWithEmailAndPassword(auth,$('#email').value,$('#password').value); } catch { $('#loginError').textContent='Sign-in failed. Check the email and password.'; } });
+$('#resetPasswordBtn').addEventListener('click', async () => {
+  const email = $('#email').value.trim();
+  if (!email) { $('#loginError').textContent='Enter your administrator email first.'; return; }
+  $('#loginError').textContent='Sending password-reset email…';
+  try {
+    await sendPasswordResetEmail(auth, email);
+    $('#loginError').textContent='Reset email sent. Check your inbox and spam folder.';
+  } catch (error) {
+    $('#loginError').textContent=error.code==='auth/invalid-email'?'Enter a valid email address.':'The reset email could not be sent. Confirm this exact email exists under Firebase Authentication → Users.';
+  }
+});
 $('#logoutBtn').onclick=()=>signOut(auth);
 onAuthStateChanged(auth, async (user) => { loginView.classList.toggle('hidden',!!user); adminView.classList.toggle('hidden',!user); if(user){ await loadSettings(); watchProjects(); watchVideos(); } });
 
