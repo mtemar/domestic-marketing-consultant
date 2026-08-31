@@ -65,6 +65,19 @@ onSnapshot(query(collection(db, 'projects'), where('published', '==', true)), (s
   bindGallery();
 }, () => {});
 
+const videoGrid = document.querySelector('#videoGrid');
+onSnapshot(query(collection(db, 'videos'), where('published', '==', true)), (snapshot) => {
+  if (snapshot.empty || !videoGrid) return;
+  const videos = snapshot.docs.map((video) => ({ id: video.id, ...video.data() }))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  videoGrid.innerHTML = videos.map((video) => {
+    const media = video.mode === 'embed'
+      ? `<div class="video-media"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(video.url)}&show_text=false&width=700" title="${escapeAttr(video.title)}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`
+      : `<a class="video-media" href="${escapeAttr(video.url)}" target="_blank" rel="noopener noreferrer" aria-label="Watch ${escapeAttr(video.title)} on Facebook">${video.thumbnail ? `<img src="${escapeAttr(video.thumbnail)}" alt="${escapeAttr(video.title)}" loading="lazy">` : '<span class="video-fallback">▶</span>'}</a>`;
+    return `<article class="video-card reveal in-view">${media}<h3>${escapeHtml(video.title)}</h3><span class="role">${escapeHtml(video.description || 'Facebook video')}</span><a class="video-watch" href="${escapeAttr(video.url)}" target="_blank" rel="noopener noreferrer">Watch on Facebook ↗</a></article>`;
+  }).join('');
+}, () => {});
+
 function escapeHtml(value = '') {
   return value.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 }
