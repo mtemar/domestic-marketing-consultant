@@ -1,0 +1,20 @@
+services:
+  site:
+    build: .
+    container_name: domestic-marketing
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - web
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+
+networks:
+  web:
+    external: true
